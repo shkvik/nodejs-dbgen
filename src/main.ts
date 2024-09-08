@@ -24,6 +24,7 @@ import { OrderStatuses } from './pg_schema/entities/OrderStatuses';
 import { ProjectStages } from './pg_schema/entities/ProjectStages';
 import { DailySales } from './pg_schema/entities/DailySales';
 import { UserVisits } from './pg_schema/entities/UserVisits';
+import { MonthlySales } from './pg_schema/entities/MonthlySales';
 
 declare global {
   interface Function {
@@ -247,6 +248,17 @@ async function createUserVisits() {
   });
 }
 
+async function createMonthlySales() {
+  return createEntity(MonthlySales)({ dataSource, length: 50 })({
+    region: () => faker.helpers.arrayElement(['North', 'South ', 'West', 'East']),
+    sales: () => faker.number.int({ min: 0, max: 2000, multipleOf: 10 }),
+    month: () => faker.date.between({
+      from: '2020-01-01T00:00:00.000Z',
+      to: '2020-06-01T00:00:00.000Z'
+    }).toDateString(),
+  });
+}
+
 async function main() {
 
   await dataSource.initialize()
@@ -255,7 +267,7 @@ async function main() {
       console.error("Error during Data Source initialization", err)
     });
 
-  await  
+  await 
 
 }
 main()
