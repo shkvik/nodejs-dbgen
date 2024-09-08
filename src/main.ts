@@ -20,6 +20,7 @@ import { Products } from './pg_schema/entities/Products';
 import { Projects } from './pg_schema/entities/Projects';
 import { Salaries } from './pg_schema/entities/Salaries';
 import { ProductPrices } from './pg_schema/entities/ProductPrices';
+import { OrderStatuses } from './pg_schema/entities/OrderStatuses';
 
 declare global {
   interface Function {
@@ -194,9 +195,20 @@ async function createSalaries() {
 
 async function createProductPrices() {
   return createEntity(ProductPrices)({ dataSource, length: 50 })({
-    productId: () => faker.number.int({ min: 0, max: 10}),
+    productId: () => faker.number.int({ min: 0, max: 10 }),
     price: () => faker.number.int({ min: 0, max: 500, multipleOf: 10 }),
     date: () => faker.date.between({
+      from: '2020-01-01T00:00:00.000Z',
+      to: '2020-06-01T00:00:00.000Z'
+    }).toDateString(),
+  });
+}
+
+async function createOrderStatuses() {
+  return createEntity(OrderStatuses)({ dataSource, length: 50 })({
+    orderId: () => faker.number.int({ min: 0, max: 10, multipleOf: 1000 }),
+    status: () => faker.helpers.arrayElement(['Shipped', 'Delivered', 'Pending']),
+    statusDate: () => faker.date.between({
       from: '2020-01-01T00:00:00.000Z',
       to: '2020-06-01T00:00:00.000Z'
     }).toDateString(),
