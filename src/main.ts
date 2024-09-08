@@ -7,6 +7,9 @@ import { SingleBar, Presets } from 'cli-progress'
 import { Employees } from './pg_schema/entities/Employees';
 import { Departments } from './pg_schema/entities/Departments';
 import { Teams } from './pg_schema/entities/Teams';
+import { Orders } from './pg_schema/entities/Orders';
+import { Customers } from './pg_schema/entities/Customers';
+import { Transactions } from './pg_schema/entities/Transactions';
 
 declare global {
   interface Function {
@@ -47,7 +50,7 @@ function createEntity<Entity>(targetEntity: new () => Entity) {
           (length / (index + 1)) > limit ? limit : length - (limit * index)
         )
       );
-      for (let i = 0; i < Math.ceil(length / limit); i++) {
+      for (let i = 0; i < raws.length; i++) {
         for (let j = 0; j < raws[i].length; j++) {
           let obj: Partial<Entity> = {};
           for (const key in entityCallbacks) {
@@ -99,6 +102,24 @@ async function createEmployees() {
   });
 }
 
+async function createOrdersAndCustomers(){
+  const customers = await createEntity(Customers)({ dataSource, length: 100 })({
+    customerName: faker.person.fullName,
+  });
+  
+  return createEntity(Orders)({ dataSource, length: 1000 })({
+    amount: faker.number.int.bindNext({ min: 0, max: 300, multipleOf: 10 }),
+    orderDate: faker.date.between.bindNext({ from: '2020-01-01T00:00:00.000Z', to: '2023-01-01T00:00:00.000Z' }),
+    customer: faker.helpers.arrayElement.bindNext(customers),
+  });
+}
+
+async function createTransactions() {
+  return createEntity(Transactions)({ dataSource, length: 500 })({
+    transactionDate: faker.date.between.bindNext({ from: '2020-01-01T00:00:00.000Z', to: '2023-01-01T00:00:00.000Z' }),
+    clientId: faker.number.int.bindNext({ min: 0, max: 100 }),
+  });
+}
 
 async function main() {
 
@@ -107,5 +128,14 @@ async function main() {
     .catch((err) => {
       console.error("Error during Data Source initialization", err)
     });
+
+  // await createEntity(Sales)({ dataSource, length: 100_000 })({
+  //   saleDate: faker.date.between.bindNext({ from: '2020-01-01T00:00:00.000Z', to: '2023-01-01T00:00:00.000Z' }),
+  //   productId: faker.number.int.bindNext({ min: 0, max: 50 }),
+  //   amount: faker.number.int.bindNext({ min: 0, max: 300, multipleOf: 10 }),
+  // });
+
+  
+
 }
 main()
