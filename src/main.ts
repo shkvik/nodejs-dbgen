@@ -27,6 +27,8 @@ import { UserVisits } from './pg_schema/entities/UserVisits';
 import { MonthlySales } from './pg_schema/entities/MonthlySales';
 import { CustomerOrders } from './pg_schema/entities/CustomerOrders';
 import { ProductRevenue } from './pg_schema/entities/ProductRevenue';
+import { EmployeeSales } from './pg_schema/entities/EmployeeSales';
+import { EmployeePerformance } from './pg_schema/entities/EmployeePerformance';
 
 declare global {
   interface Function {
@@ -284,6 +286,24 @@ async function createProductRevenue() {
   });
 }
 
+async function createEmployeeSales() {
+  return createEntity(EmployeeSales)({ dataSource, length: 50 })({
+    employeeId: () => faker.number.int({ min: 0, max: 10 }),
+    salesAmount: () => faker.number.int({ min: 2000, max: 8000, multipleOf: 100 }),
+    salesMonth: () => faker.date.between({
+      from: '2020-01-01T00:00:00.000Z',
+      to: '2020-01-01T00:00:00.000Z'
+    }).toDateString(),
+  });
+}
+
+async function createEmployeePerformance() {
+  return createEntity(EmployeePerformance)({ dataSource, length: 50 })({
+    employeeId: () => faker.number.int({ min: 0, max: 10 }),
+    tasksCompleted: () => faker.number.int({ min: 10, max: 20 }),
+  });
+}
+
 async function main() {
 
   await dataSource.initialize()
@@ -291,5 +311,7 @@ async function main() {
     .catch((err) => {
       console.error("Error during Data Source initialization", err)
     });
+
+
 }
 main()
