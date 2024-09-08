@@ -19,6 +19,7 @@ import { Purchases } from './pg_schema/entities/Purchases';
 import { Products } from './pg_schema/entities/Products';
 import { Projects } from './pg_schema/entities/Projects';
 import { Salaries } from './pg_schema/entities/Salaries';
+import { ProductPrices } from './pg_schema/entities/ProductPrices';
 
 declare global {
   interface Function {
@@ -184,10 +185,21 @@ async function createSalaries() {
   return createEntity(Salaries)({ dataSource, length: 50 })({
     employeeId: () => faker.number.int({ min: 0, max: 5 }),
     salary: () => faker.number.int({ min: 2000, max: 10000, multipleOf: 100 }),
-    month: () => faker.date.between({ 
-      from: '2020-01-01T00:00:00.000Z', 
+    month: () => faker.date.between({
+      from: '2020-01-01T00:00:00.000Z',
       to: '2020-06-01T00:00:00.000Z'
     }).toDateString()
+  });
+}
+
+async function createProductPrices() {
+  return createEntity(ProductPrices)({ dataSource, length: 50 })({
+    productId: () => faker.number.int({ min: 0, max: 10}),
+    price: () => faker.number.int({ min: 0, max: 500, multipleOf: 10 }),
+    date: () => faker.date.between({
+      from: '2020-01-01T00:00:00.000Z',
+      to: '2020-06-01T00:00:00.000Z'
+    }).toDateString(),
   });
 }
 
