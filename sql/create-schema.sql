@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS products (
-    product_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,        
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    product_id INT,        
     name VARCHAR(255) DEFAULT NULL,   
 	sale_date TIMESTAMP DEFAULT NULL, 
     description TEXT DEFAULT NULL,            
@@ -19,7 +20,8 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 CREATE TABLE IF NOT EXISTS sales (
-	product_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	product_id INT,
 	sale_date TIMESTAMP DEFAULT NULL,
 	amount INT CHECK (amount >= 0) DEFAULT NULL
 );
@@ -63,12 +65,14 @@ CREATE TABLE IF NOT EXISTS transactions (
 );
 
 CREATE TABLE IF NOT EXISTS student_grades (
-	student_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	student_id INT,
 	course_id INT CHECK (course_id >= 0) DEFAULT NULL,
 	grade INT CHECK (grade >= 0) DEFAULT NULL 
 );
 
 CREATE TABLE IF NOT EXISTS responses (
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	employee_id INT CHECK (employee_id >= 0) DEFAULT NULL,
 	response_time INT CHECK (response_time >= 0) DEFAULT NULL
 );
@@ -86,6 +90,7 @@ CREATE TABLE IF NOT EXISTS movies (
 );
 
 CREATE TABLE IF NOT EXISTS employee_projects (
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	employee_id INT CHECK (employee_id >= 0) DEFAULT NULL,
 	project_id INT CHECK (project_id >= 0) DEFAULT NULL
 );
@@ -96,71 +101,83 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 
 CREATE TABLE IF NOT EXISTS salaries (
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	employee_id INT CHECK (employee_id >= 0) DEFAULT NULL,
 	month DATE DEFAULT NULL,
 	salary INT CHECK (salary >= 0) DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS product_prices (
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	product_id INT CHECK (product_id >= 0) DEFAULT NULL,
 	date DATE DEFAULT NULL,
 	price INT CHECK (price >= 0) DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS order_statuses (
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	order_id INT CHECK (order_id >= 0) DEFAULT NULL,
 	status VARCHAR(255) DEFAULT NULL,
 	status_date DATE DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS project_stages(
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	project_id INT CHECK (project_id >= 0) DEFAULT NULL,
 	stage VARCHAR(255) DEFAULT NULL,
 	start_date DATE DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS daily_sales(
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	date DATE DEFAULT NULL,
 	sales INT CHECK (sales >= 0) DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS user_visits(
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	user_id INT CHECK (user_id >= 0) DEFAULT NULL,
 	visit_date DATE DEFAULT NULL,
 	visit_count INT CHECK (visit_count >= 0) DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS monthly_sales(
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	region VARCHAR(255) DEFAULT NULL,
 	month DATE DEFAULT NULL,
 	sales INT CHECK(sales >= 0) DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS customer_orders(
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	customer_id INT CHECK(customer_id >= 0) DEFAULT NULL,
 	order_date DATE DEFAULT NULL,
 	order_amount INT CHECK(order_amount >= 0) DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS product_revenue(
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	product_id INT CHECK (product_id >= 0),
 	revenue_date DATE,
 	revenue_amount INT CHECK (revenue_amount >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS student_scores(
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	student_id INT CHECK (student_id >= 0),
 	subject VARCHAR(255),
 	score INT CHECK (score >= 0 AND score <= 100)
 );
 
 CREATE TABLE IF NOT EXISTS employee_sales(
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	employee_id INT CHECK (employee_id >= 0),
 	sales_month DATE,
 	sales_amount INT CHECK( sales_amount>=0)
 );
 
 CREATE TABLE IF NOT EXISTS employee_performance(
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	employee_id INT CHECK (employee_id >= 0),
 	tasks_completed INT CHECK (tasks_completed >= 0)
 );
@@ -187,10 +204,14 @@ CREATE TABLE IF NOT EXISTS cources(
 	student_id INT REFERENCES students(student_id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS purchases(
+	purchase_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	client_id INT CHECK (purchase_amount >= 0),
+	category_id VARCHAR(255),
+	purchase_amount INT CHECK (purchase_amount >= 0)
+);
+
 END;
-
-
-
 
 
 

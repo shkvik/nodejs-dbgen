@@ -15,6 +15,8 @@ import { Students } from './pg_schema/entities/Students';
 import { Responses } from './pg_schema/entities/Responses';
 import { SalesReps } from './pg_schema/entities/SalesReps';
 import { Movies } from './pg_schema/entities/Movies';
+import { Purchases } from './pg_schema/entities/Purchases';
+import { Products } from './pg_schema/entities/Products';
 
 declare global {
   interface Function {
@@ -155,6 +157,21 @@ async function createMovies() {
   });
 }
 
+async function createPurchases() {
+  return createEntity(Purchases)({ dataSource, length: 50 })({
+    clientId: () => faker.number.int({ min: 0, max: 10 }),
+    categoryId: () => faker.helpers.arrayElement(['A','B','C','D','E']),
+    purchaseAmount: () => faker.number.int({ min: 0, max: 1000 })
+  });
+}
+
+async function createProducts() {
+  return createEntity(Products)({ dataSource, length: 50 })({
+    productId: () => faker.number.int({ min: 0, max: 50 }),
+    sales: () => faker.number.int({ min: 0, max: 5000, multipleOf: 100 })
+  });
+}
+
 async function main() {
 
   await dataSource.initialize()
@@ -163,10 +180,7 @@ async function main() {
       console.error("Error during Data Source initialization", err)
     });
 
-  return createEntity(Movies)({ dataSource, length: 50 })({
-    genre: () => faker.music.genre(),
-    rating: () => String(faker.number.float({ min: 0, max: 10, fractionDigits: 1 }))
-  });
+  
 
 }
 main()
