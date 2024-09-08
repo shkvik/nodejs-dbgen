@@ -21,6 +21,8 @@ import { Projects } from './pg_schema/entities/Projects';
 import { Salaries } from './pg_schema/entities/Salaries';
 import { ProductPrices } from './pg_schema/entities/ProductPrices';
 import { OrderStatuses } from './pg_schema/entities/OrderStatuses';
+import { ProjectStages } from './pg_schema/entities/ProjectStages';
+import { DailySales } from './pg_schema/entities/DailySales';
 
 declare global {
   interface Function {
@@ -206,7 +208,6 @@ async function createProductPrices() {
 
 async function createOrderStatuses() {
   return createEntity(OrderStatuses)({ dataSource, length: 50 })({
-    orderId: () => faker.number.int({ min: 0, max: 10, multipleOf: 1000 }),
     status: () => faker.helpers.arrayElement(['Shipped', 'Delivered', 'Pending']),
     statusDate: () => faker.date.between({
       from: '2020-01-01T00:00:00.000Z',
@@ -214,6 +215,16 @@ async function createOrderStatuses() {
     }).toDateString(),
   });
 }
+async function createProjectStages() {
+  return createEntity(ProjectStages)({ dataSource, length: 50 })({
+    stage: () => faker.helpers.arrayElement(['Planning', 'Execution', 'Review']),
+    startDate: () => faker.date.between({
+      from: '2020-01-01T00:00:00.000Z',
+      to: '2020-06-01T00:00:00.000Z'
+    }).toDateString(),
+  });
+}
+
 
 async function main() {
 
@@ -223,6 +234,13 @@ async function main() {
       console.error("Error during Data Source initialization", err)
     });
 
+  await createEntity(DailySales)({ dataSource, length: 50 })({
+    sales: () => faker.number.int({ min: 0, max: 500, multipleOf: 10 }),
+    date: () => faker.date.between({
+      from: '2020-01-01T00:00:00.000Z',
+      to: '2020-06-01T00:00:00.000Z'
+    }).toDateString(),
+  });
 
 }
 main()
