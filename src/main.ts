@@ -1,6 +1,6 @@
 import { Users } from './pg_schema/entities/Users'
 import { dataSource } from './config'
-import { faker } from '@faker-js/faker';
+import { fa, faker } from '@faker-js/faker';
 import { DataSource, DeepPartial, Entity, EntityTarget, ObjectLiteral, Repository } from 'typeorm';
 import { Sales } from './pg_schema/entities/Sales';
 import { SingleBar, Presets } from 'cli-progress'
@@ -10,6 +10,11 @@ import { Teams } from './pg_schema/entities/Teams';
 import { Orders } from './pg_schema/entities/Orders';
 import { Customers } from './pg_schema/entities/Customers';
 import { Transactions } from './pg_schema/entities/Transactions';
+import { StudentGrades } from './pg_schema/entities/StudentGrades';
+import { Students } from './pg_schema/entities/Students';
+import { Responses } from './pg_schema/entities/Responses';
+import { SalesReps } from './pg_schema/entities/SalesReps';
+import { Movies } from './pg_schema/entities/Movies';
 
 declare global {
   interface Function {
@@ -87,13 +92,13 @@ async function createEmployees() {
   // const teams = dataSource.getRepository(Teams);
   // const departments = dataSource.getRepository(Departments);
 
-  const departments = await createEntity(Departments)({ dataSource, length: 1000 })({
+  const departments = await createEntity(Departments)({ dataSource, length: 10 })({
     departmentName: faker.person.jobType,
   });
-  const teams = await createEntity(Teams)({ dataSource, length: 1000 })({
+  const teams = await createEntity(Teams)({ dataSource, length: 10 })({
     teamName: faker.person.jobArea
   });
-  return createEntity(Employees)({ dataSource, length: 1_000_000 })({
+  return createEntity(Employees)({ dataSource, length: 100 })({
     name: faker.person.firstName,
     department: faker.person.jobType,
     salary: faker.number.int.bindNext({ min: 0, max: 10000, multipleOf: 1000 }),
@@ -102,12 +107,12 @@ async function createEmployees() {
   });
 }
 
-async function createOrdersAndCustomers(){
-  const customers = await createEntity(Customers)({ dataSource, length: 100 })({
+async function createOrdersAndCustomers() {
+  const customers = await createEntity(Customers)({ dataSource, length: 10 })({
     customerName: faker.person.fullName,
   });
-  
-  return createEntity(Orders)({ dataSource, length: 1000 })({
+
+  return createEntity(Orders)({ dataSource, length: 100 })({
     amount: faker.number.int.bindNext({ min: 0, max: 300, multipleOf: 10 }),
     orderDate: faker.date.between.bindNext({ from: '2020-01-01T00:00:00.000Z', to: '2023-01-01T00:00:00.000Z' }),
     customer: faker.helpers.arrayElement.bindNext(customers),
@@ -115,9 +120,38 @@ async function createOrdersAndCustomers(){
 }
 
 async function createTransactions() {
-  return createEntity(Transactions)({ dataSource, length: 500 })({
+  return createEntity(Transactions)({ dataSource, length: 50 })({
     transactionDate: faker.date.between.bindNext({ from: '2020-01-01T00:00:00.000Z', to: '2023-01-01T00:00:00.000Z' }),
-    clientId: faker.number.int.bindNext({ min: 0, max: 100 }),
+    clientId: faker.number.int.bindNext({ min: 0, max: 10 }),
+  });
+}
+
+async function createStudentGrades() {
+  return createEntity(StudentGrades)({ dataSource, length: 100 })({
+    studentId: faker.number.int.bindNext({ min: 0, max: 50 }),
+    courseId: faker.number.int.bindNext({ min: 0, max: 10 }),
+    grade: faker.number.int.bindNext({ min: 0, max: 100 }),
+  });
+}
+
+async function createResponses() {
+  return createEntity(Responses)({ dataSource, length: 50 })({
+    employeeId: faker.number.int.bindNext({ min: 0, max: 50 }),
+    responseTime: faker.number.int.bindNext({ min: 0, max: 100, multipleOf: 10 }),
+  });
+}
+
+async function createSalesReps() {
+  return createEntity(SalesReps)({ dataSource, length: 50 })({
+    salesCount: faker.number.int.bindNext({ min: 0, max: 1000 }),
+    month: faker.date.between.bindNext({ from: '2020-01-01T00:00:00.000Z', to: '2020-06-01T00:00:00.000Z' })
+  });
+}
+
+async function createMovies() {
+  return createEntity(Movies)({ dataSource, length: 50 })({
+    genre: () => faker.music.genre(),
+    rating: () => String(faker.number.float({ min: 0, max: 10, fractionDigits: 1 }))
   });
 }
 
@@ -129,13 +163,10 @@ async function main() {
       console.error("Error during Data Source initialization", err)
     });
 
-  // await createEntity(Sales)({ dataSource, length: 100_000 })({
-  //   saleDate: faker.date.between.bindNext({ from: '2020-01-01T00:00:00.000Z', to: '2023-01-01T00:00:00.000Z' }),
-  //   productId: faker.number.int.bindNext({ min: 0, max: 50 }),
-  //   amount: faker.number.int.bindNext({ min: 0, max: 300, multipleOf: 10 }),
-  // });
-
-  
+  return createEntity(Movies)({ dataSource, length: 50 })({
+    genre: () => faker.music.genre(),
+    rating: () => String(faker.number.float({ min: 0, max: 10, fractionDigits: 1 }))
+  });
 
 }
 main()
