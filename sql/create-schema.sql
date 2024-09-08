@@ -10,13 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS products (
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     product_id INT,        
-    name VARCHAR(255) DEFAULT NULL,   
-	sale_date TIMESTAMP DEFAULT NULL, 
-    description TEXT DEFAULT NULL,            
-    price INT CHECK (price >= 0) DEFAULT NULL,
-	sales INT CHECK (sales >= 0) DEFAULT NULL, 
-    stock INT DEFAULT 0,          
-	quantity INT DEFAULT 0
+	sales INT CHECK (sales >= 0) DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS sales (

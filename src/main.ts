@@ -17,6 +17,8 @@ import { SalesReps } from './pg_schema/entities/SalesReps';
 import { Movies } from './pg_schema/entities/Movies';
 import { Purchases } from './pg_schema/entities/Purchases';
 import { Products } from './pg_schema/entities/Products';
+import { Projects } from './pg_schema/entities/Projects';
+import { Salaries } from './pg_schema/entities/Salaries';
 
 declare global {
   interface Function {
@@ -103,7 +105,7 @@ async function createEmployees() {
   return createEntity(Employees)({ dataSource, length: 100 })({
     name: faker.person.firstName,
     department: faker.person.jobType,
-    salary: faker.number.int.bindNext({ min: 0, max: 10000, multipleOf: 1000 }),
+    salary: faker.number.int.bindNext({ min: 0, max: 10000, multipleOf: 50 }),
     department_2: faker.helpers.arrayElement.bindNext(departments),
     team: faker.helpers.arrayElement.bindNext(teams)
   });
@@ -129,7 +131,7 @@ async function createTransactions() {
 }
 
 async function createStudentGrades() {
-  return createEntity(StudentGrades)({ dataSource, length: 100 })({
+  return createEntity(StudentGrades)({ dataSource, length: 50 })({
     studentId: faker.number.int.bindNext({ min: 0, max: 50 }),
     courseId: faker.number.int.bindNext({ min: 0, max: 10 }),
     grade: faker.number.int.bindNext({ min: 0, max: 100 }),
@@ -160,7 +162,7 @@ async function createMovies() {
 async function createPurchases() {
   return createEntity(Purchases)({ dataSource, length: 50 })({
     clientId: () => faker.number.int({ min: 0, max: 10 }),
-    categoryId: () => faker.helpers.arrayElement(['A','B','C','D','E']),
+    categoryId: () => faker.helpers.arrayElement(['A', 'B', 'C', 'D', 'E']),
     purchaseAmount: () => faker.number.int({ min: 0, max: 1000 })
   });
 }
@@ -172,6 +174,23 @@ async function createProducts() {
   });
 }
 
+async function createProjects() {
+  return createEntity(Projects)({ dataSource, length: 50 })({
+    budget: () => faker.number.int({ min: 0, max: 100_000, multipleOf: 1000 })
+  });
+}
+
+async function createSalaries() {
+  return createEntity(Salaries)({ dataSource, length: 50 })({
+    employeeId: () => faker.number.int({ min: 0, max: 5 }),
+    salary: () => faker.number.int({ min: 2000, max: 10000, multipleOf: 100 }),
+    month: () => faker.date.between({ 
+      from: '2020-01-01T00:00:00.000Z', 
+      to: '2020-06-01T00:00:00.000Z'
+    }).toDateString()
+  });
+}
+
 async function main() {
 
   await dataSource.initialize()
@@ -180,7 +199,6 @@ async function main() {
       console.error("Error during Data Source initialization", err)
     });
 
-  
 
 }
 main()
