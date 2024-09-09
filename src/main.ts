@@ -32,6 +32,9 @@ import { EmployeePerformance } from './pg_schema/entities/EmployeePerformance';
 import { Authors } from './pg_schema/entities/Authors';
 import { Books } from './pg_schema/entities/Books';
 import { Courses } from './pg_schema/entities/Courses';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
 
 declare global {
   interface Function {
@@ -105,10 +108,6 @@ function createEntity<Entity>(targetEntity: new () => Entity) {
 }
 
 async function createEmployees() {
-  // const employees = dataSource.getRepository(Employees);
-  // const teams = dataSource.getRepository(Teams);
-  // const departments = dataSource.getRepository(Departments);
-
   const departments = await createEntity(Departments)({ dataSource, length: 10 })({
     departmentName: faker.person.jobType,
   });
@@ -330,13 +329,40 @@ async function createCoursesAndStudents() {
 
 
 async function main() {
-  await dataSource.initialize()
-    .then(() => console.log("Data Source has been initialized!"))
-    .catch((err) => {
-      console.error("Error during Data Source initialization", err)
-    });
 
-
+  const createSchema = readFileSync(join('sql/create-schema.sql'), 'utf-8');
+  const deleteSchema = readFileSync(join('sql/delete-schema.sql'), 'utf-8');
+  
+  await dataSource.initialize();
+  
+  await dataSource.query(deleteSchema);
+  await dataSource.query(createSchema);
+    
+  
+  await createEmployees();
+  await createOrdersAndCustomers();
+  await createTransactions();
+  await createStudentGrades();
+  await createResponses();
+  await createSalesReps();
+  await createMovies();
+  await createPurchases();
+  await createProducts();
+  await createProjects();
+  await createSalaries();
+  await createProductPrices();
+  await createOrderStatuses();
+  await createProjectStages();
+  await createDailySales();
+  await createUserVisits();
+  await createMonthlySales();
+  await createCustomerOrders();
+  await createProductRevenue();
+  await createEmployeeSales();
+  await createEmployeePerformance();
+  await createBooksAndAuthors();
+  await createCoursesAndStudents();
 
 }
 main()
+
