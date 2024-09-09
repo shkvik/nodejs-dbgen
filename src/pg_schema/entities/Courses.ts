@@ -8,20 +8,20 @@ import {
 } from "typeorm";
 import { Students } from "./Students";
 
-@Index("cources_pkey", ["courceId"], { unique: true })
-@Entity("cources", { schema: "public" })
-export class Cources {
-  @PrimaryGeneratedColumn({ type: "integer", name: "cource_id" })
-  courceId: number;
+@Index("courses_pkey", ["courseId"], { unique: true })
+@Entity("courses", { schema: "public" })
+export class Courses {
+  @PrimaryGeneratedColumn({ type: "integer", name: "course_id" })
+  courseId: number;
 
   @Column("character varying", {
-    name: "cource_name",
+    name: "course_name",
     nullable: true,
     length: 255,
   })
-  courceName: string | null;
+  courseName: string | null;
 
-  @ManyToOne(() => Students, (students) => students.cources, {
+  @ManyToOne(() => Students, (students) => students.courses, {
     onDelete: "CASCADE",
     onUpdate: "CASCADE",
   })

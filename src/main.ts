@@ -29,6 +29,9 @@ import { CustomerOrders } from './pg_schema/entities/CustomerOrders';
 import { ProductRevenue } from './pg_schema/entities/ProductRevenue';
 import { EmployeeSales } from './pg_schema/entities/EmployeeSales';
 import { EmployeePerformance } from './pg_schema/entities/EmployeePerformance';
+import { Authors } from './pg_schema/entities/Authors';
+import { Books } from './pg_schema/entities/Books';
+import { Courses } from './pg_schema/entities/Courses';
 
 declare global {
   interface Function {
@@ -304,13 +307,35 @@ async function createEmployeePerformance() {
   });
 }
 
-async function main() {
 
+async function createBooksAndAuthors() {
+  const authors = await createEntity(Authors)({ dataSource, length: 5 })({
+    authorName: () => faker.person.firstName(),
+  });
+  return createEntity(Books)({ dataSource, length: 30 })({
+    author: () => faker.helpers.arrayElement(authors),
+    bookTitle: () => faker.hacker.phrase()
+  });
+}
+
+async function createCoursesAndStudents() {
+  const students = await createEntity(Students)({ dataSource, length: 5 })({
+    studentName: () => faker.person.firstName(),
+  });
+  return createEntity(Courses)({ dataSource, length: 30 })({
+    student: () => faker.helpers.arrayElement([...students, null]),
+    courseName: () => faker.lorem.sentence(4)
+  });
+}
+
+
+async function main() {
   await dataSource.initialize()
     .then(() => console.log("Data Source has been initialized!"))
     .catch((err) => {
       console.error("Error during Data Source initialization", err)
     });
+
 
 
 }

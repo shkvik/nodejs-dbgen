@@ -5,7 +5,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Cources } from "./Cources";
+import { Courses } from "./Courses";
 
 @Index("students_pkey", ["studentId"], { unique: true })
 @Entity("students", { schema: "public" })
@@ -20,6 +20,6 @@ export class Students {
   })
   studentName: string | null;
 
-  @OneToMany(() => Cources, (cources) => cources.student)
-  cources: Cources[];
+  @OneToMany(() => Courses, (courses) => courses.student)
+  courses: Courses[];
 }
