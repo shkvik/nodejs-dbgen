@@ -28,14 +28,26 @@ class Generator {
     logging: false,
   });
 
-  private async createEmployees(mainTable: number, littleTable: number) {
-    const departments = await this.createEntity(Departments)(littleTable)({
+  constructor(
+    private readonly minimumPrimary: number,
+    private readonly secondaryDenominator: number,
+  ){
+
+  }
+
+  private async createEmployees(
+    primarySize: number = this.minimumPrimary, 
+    secondaryDenominator = this.secondaryDenominator
+  ) {
+    const secondarySize = Math.floor(primarySize/secondaryDenominator);
+
+    const departments = await this.createEntity(Departments)(secondarySize)({
       departmentName: () => faker.person.jobType(),
     });
-    const teams = await this.createEntity(Teams)(littleTable)({
+    const teams = await this.createEntity(Teams)(secondarySize)({
       teamName: () => faker.person.jobArea()
     });
-    return this.createEntity(Employees)(mainTable)({
+    return this.createEntity(Employees)(primarySize)({
       department_2: () => faker.helpers.arrayElement(departments),
       department: () => faker.person.jobType(),
       salary: () => faker.number.int({ min: 0, max: 10000, multipleOf: 50 }),
@@ -45,8 +57,8 @@ class Generator {
   }
 
   private createEntity<Entity>(targetEntity: new () => Entity) {
-    return function (length: number) {
-      return async function createFakeSales(entityCallbacks: DeepCallbacks<Entity>) {
+    return (length: number) => {
+      return async (entityCallbacks: DeepCallbacks<Entity>) => {
         const limit = 1000;
         const barLimit = Math.ceil(length / limit);
         const creatingBar = new SingleBar({
