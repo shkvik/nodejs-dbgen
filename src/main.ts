@@ -1,6 +1,6 @@
 import { Generator } from './generator';
 
 (async () => {
-  const gen = new Generator(100, 10);
+  const gen = new Generator(50, 10);
   await gen.run();
 })();

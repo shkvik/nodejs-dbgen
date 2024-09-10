@@ -67,7 +67,7 @@ export class Generator {
     await this.deleteSchema();
     await this.createSchema();
 
-    await this.createEmployeesDepartmentsTeams();
+    await this.createEmployeesDepartmentsTeams(100_000, 1000);
     await this.createOrdersAndCustomers();
     await this.createTransactions();
     await this.createStudentGrades();
