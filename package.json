@@ -23,8 +23,11 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "class-validator": "^0.14.1",
     "cli-progress": "^3.12.0",
     "dotenv": "^16.4.5",
+    "js-yaml": "^4.1.0",
     "pg": "^8.12.0",
     "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.20"

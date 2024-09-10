@@ -31,6 +31,7 @@ import { Students } from "./pg_schema/entities/Students";
 import { Courses } from "./pg_schema/entities/Courses";
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { getConfig } from "./config";
 
 type DeepStructure<T> = T | (T extends Array<infer U> ? DeepStructure<U>[]
   : T extends Map<infer K, infer V> ? Map<DeepStructure<K>, DeepStructure<V>>
@@ -61,6 +62,8 @@ export class Generator {
   ) { }
 
   public async run() {
+
+    const config = getConfig();
 
     await this.dataSource.initialize();
 
@@ -113,7 +116,7 @@ export class Generator {
     return this.createEntity(Employees)(primarySize)({
       department_2: () => faker.helpers.arrayElement(departments),
       department: () => faker.person.jobType(),
-      salary: () => faker.number.int({ min: 0, max: 10000, multipleOf: 50 }),
+      salary: () => faker.number.int({ min: 1500, max: 10000, multipleOf: 50 }),
       name: () => faker.person.firstName(),
       team: () => faker.helpers.arrayElement(teams)
     });
