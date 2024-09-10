@@ -174,7 +174,7 @@ export class Generator {
   private async createMovies(size: number = this.minPrimarySize): Promise<Movies[]> {
     return this.createEntity(Movies)(size)({
       genre: () => faker.music.genre(),
-      rating: () => String(faker.number.float({ min: 0, max: 10, fractionDigits: 1 }))
+      rating: () => faker.number.float({ min: 0, max: 9.9, fractionDigits: 1 }).toFixed(1)
     });
   }
 
@@ -224,6 +224,7 @@ export class Generator {
   private async createOrderStatuses(size: number = this.minPrimarySize): Promise<OrderStatuses[]> {
     return this.createEntity(OrderStatuses)(size)({
       status: () => faker.helpers.arrayElement(['Shipped', 'Delivered', 'Pending']),
+      orderId: () => faker.number.int({ min: 0, max: 10 }),
       statusDate: () => faker.date.between({
         from: '2020-01-01T00:00:00.000Z',
         to: '2020-06-01T00:00:00.000Z'
