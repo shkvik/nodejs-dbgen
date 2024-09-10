@@ -7,6 +7,7 @@
     "build": "tsc --build",
     "build:prod": "npm run build && npm prune --omit=dev",
     "start:prod": "node dist/src/main.js",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "typeorm:generate": "typeorm-model-generator -h localhost -d postgres -u user -x password -e postgres -o ./src/pg_schema"
   },
   "author": "",
@@ -15,6 +16,9 @@
   "devDependencies": {
     "@faker-js/faker": "^9.0.0",
     "@types/cli-progress": "^3.11.6",
+    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "@typescript-eslint/parser": "^8.5.0",
+    "eslint": "^8.42.0",
     "typeorm-model-generator": "^0.4.6",
     "typescript": "^5.5.4"
   },
