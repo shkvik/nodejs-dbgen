@@ -1,15 +1,15 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS users (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    username VARCHAR(50) NOT NULL, 
-    email VARCHAR(100) NOT NULL,  
-    password VARCHAR(255) NOT NULL
+	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	username VARCHAR(50) NOT NULL,
+	email VARCHAR(100) NOT NULL,
+	password VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS products (
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    product_id INT,        
+	product_id INT,
 	sales INT CHECK (sales >= 0) DEFAULT NULL
 );
 
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS departments(
 CREATE TABLE IF NOT EXISTS employees (
 	employee_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	name VARCHAR(255) DEFAULT NULL,
-	department VARCHAR(255) DEFAULT NULL,	
+	department VARCHAR(255) DEFAULT NULL,
 	salary INT CHECK (salary >= 0) DEFAULT NULL,
 	team_id INT REFERENCES teams(team_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	department_id INT REFERENCES departments(department_id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS student_grades (
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	student_id INT,
 	course_id INT CHECK (course_id >= 0) DEFAULT NULL,
-	grade INT CHECK (grade >= 0) DEFAULT NULL 
+	grade INT CHECK (grade >= 0) DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS responses (
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS sales_reps (
 CREATE TABLE IF NOT EXISTS movies (
 	movie_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	genre VARCHAR(255) DEFAULT NULL,
-	rating DECIMAL(2,1) DEFAULT NULL
+	rating DECIMAL(2, 1) DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS employee_projects (
@@ -160,14 +160,17 @@ CREATE TABLE IF NOT EXISTS student_scores(
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	student_id INT CHECK (student_id >= 0),
 	subject VARCHAR(255),
-	score INT CHECK (score >= 0 AND score <= 100)
+	score INT CHECK (
+		score >= 0
+		AND score <= 100
+	)
 );
 
 CREATE TABLE IF NOT EXISTS employee_sales(
 	id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	employee_id INT CHECK (employee_id >= 0),
 	sales_month DATE,
-	sales_amount INT CHECK( sales_amount>=0)
+	sales_amount INT CHECK(sales_amount >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS employee_performance(
@@ -206,13 +209,3 @@ CREATE TABLE IF NOT EXISTS purchases(
 );
 
 END;
-
-
-
-
-
-
-
-
-
-

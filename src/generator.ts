@@ -31,7 +31,7 @@ import { Students } from "./pg_schema/entities/Students";
 import { Courses } from "./pg_schema/entities/Courses";
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { getConfig } from "./config";
+import { TablesConfig } from "./config";
 
 type DeepStructure<T> = T | (T extends Array<infer U> ? DeepStructure<U>[]
   : T extends Map<infer K, infer V> ? Map<DeepStructure<K>, DeepStructure<V>>
@@ -44,6 +44,23 @@ type DeepCallbacks<T> = {
   [K in keyof Omit<T, 'id'>]?: (...args: any[]) => DeepStructure<T[K]>;
 }
 
+
+function CreateTableMethod() {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const tableMethods = Reflect.getMetadata('tableMethods', target) || [];
+    const originalMethod = descriptor.value;
+
+    descriptor.value = function (target, ...args: any[]) {
+      return originalMethod.apply(target, args);
+    };
+    
+    tableMethods.push(descriptor.value);
+    Reflect.defineMetadata('tableMethods', tableMethods, target);
+    return descriptor;
+  }
+}
+
+
 export class Generator {
   private readonly dataSource = new DataSource({
     type: 'postgres',
@@ -55,65 +72,58 @@ export class Generator {
     entities: [__dirname + '/pg_schema/entities/*{.ts,.js}'],
     logging: false,
   });
+  private readonly config = TablesConfig.getConfig();
 
   constructor(
-    private readonly minPrimarySize: number,
-    private readonly minSecondarySize: number,
+    private readonly minPrimarySize: number = 100,
+    private readonly minSecondarySize: number = 10,
   ) { }
 
   public async run() {
-
-    const config = getConfig();
-
     await this.dataSource.initialize();
 
     await this.deleteSchema();
     await this.createSchema();
 
-    await this.createEmployeesDepartmentsTeams(100_000, 1000);
-    await this.createOrdersAndCustomers();
-    await this.createTransactions();
-    await this.createStudentGrades();
-    await this.createResponses();
-    await this.createSalesReps();
-    await this.createMovies();
-    await this.createPurchases();
-    await this.createProducts();
-    await this.createProjects();
-    await this.createSalaries();
-    await this.createProductPrices();
-    await this.createOrderStatuses();
-    await this.createProjectStages();
-    await this.createDailySales();
-    await this.createUserVisits();
-    await this.createMonthlySales();
-    await this.createCustomerOrders();
-    await this.createProductRevenue();
-    await this.createEmployeeSales();
-    await this.createEmployeePerformance();
-    await this.createBooksAndAuthors();
-    await this.createCoursesAndStudents();
+    await this.callTableMethods();
   }
 
   private async deleteSchema(): Promise<void> {
     await this.dataSource.query(readFileSync(join('sql/delete-schema.sql'), 'utf-8'));
+    await this.dataSource.query(`VACUUM FULL`);
   }
 
   private async createSchema(): Promise<void> {
     await this.dataSource.query(readFileSync(join('sql/create-schema.sql'), 'utf-8'));
   }
 
+  private async callTableMethods(){
+    const methods: Array<(...args: any[]) => Promise<any>> = Reflect
+      .getMetadata('tableMethods', Generator.prototype) || [];
+    const uploadingBar = new SingleBar({
+      format: `progress |{bar}| {percentage}% | tables created {value}/{total}`,
+    }, Presets.legacy);
+    uploadingBar.start(methods.length, 0);
+    for(const method of methods){
+      await method(this);
+      uploadingBar.increment();
+    }
+    uploadingBar.stop();
+  }
+
+  @CreateTableMethod()
   private async createEmployeesDepartmentsTeams(
-    primarySize: number = this.minPrimarySize,
-    secondarySize: number = this.minSecondarySize
+    employeesSize: number = this.config.employees || this.minPrimarySize,
+    departmentsSize: number = this.config.departments || this.minSecondarySize,
+    teamsSize: number = this.config.teams || this.minSecondarySize,
   ): Promise<Employees[]> {
-    const departments = await this.createEntity(Departments)(secondarySize)({
+    const departments = await this.createEntity(Departments)(teamsSize)({
       departmentName: () => faker.person.jobType(),
     });
-    const teams = await this.createEntity(Teams)(secondarySize)({
+    const teams = await this.createEntity(Teams)(departmentsSize)({
       teamName: () => faker.person.jobArea()
     });
-    return this.createEntity(Employees)(primarySize)({
+    return this.createEntity(Employees)(employeesSize)({
       department_2: () => faker.helpers.arrayElement(departments),
       department: () => faker.person.jobType(),
       salary: () => faker.number.int({ min: 1500, max: 10000, multipleOf: 50 }),
@@ -122,14 +132,15 @@ export class Generator {
     });
   }
 
+  @CreateTableMethod()
   private async createOrdersAndCustomers(
-    primarySize: number = this.minPrimarySize,
-    secondarySize: number = this.minSecondarySize
+    ordersSize: number = this.config.orders || this.minPrimarySize,
+    customersSize: number = this.config.customers || this.minSecondarySize
   ): Promise<Orders[]> {
-    const customers = await this.createEntity(Customers)(secondarySize)({
+    const customers = await this.createEntity(Customers)(customersSize)({
       customerName: () => faker.person.fullName(),
     });
-    return this.createEntity(Orders)(primarySize)({
+    return this.createEntity(Orders)(ordersSize)({
       amount: () => faker.number.int({ min: 0, max: 300, multipleOf: 10 }),
       customer: () => faker.helpers.arrayElement(customers),
       orderDate: () => faker.date.between({
@@ -139,7 +150,38 @@ export class Generator {
     });
   }
 
-  private async createTransactions(size: number = this.minPrimarySize): Promise<Transactions[]> {
+  @CreateTableMethod()
+  private async createBooksAndAuthors(
+    booksSize: number = this.config.books || this.minPrimarySize,
+    authorsSize: number = this.config.authors || this.minSecondarySize
+  ): Promise<Books[]> {
+    const authors = await this.createEntity(Authors)(authorsSize)({
+      authorName: () => faker.person.firstName(),
+    });
+    return this.createEntity(Books)(booksSize)({
+      author: () => faker.helpers.arrayElement(authors),
+      bookTitle: () => faker.hacker.phrase()
+    });
+  }
+
+  @CreateTableMethod()
+  private async createCoursesAndStudents(
+    coursesSize: number = this.config.courses || this.minPrimarySize,
+    studentsSize: number = this.config.students || this.minSecondarySize
+  ): Promise<Courses[]> {
+    const students = await this.createEntity(Students)(studentsSize)({
+      studentName: () => faker.person.firstName(),
+    });
+    return this.createEntity(Courses)(coursesSize)({
+      student: () => faker.helpers.arrayElement([...students, null]),
+      courseName: () => faker.lorem.sentence(4)
+    });
+  }
+
+  @CreateTableMethod()
+  private async createTransactions(
+    size: number = this.config.transactions || this.minPrimarySize
+  ): Promise<Transactions[]> {
     return this.createEntity(Transactions)(size)({
       clientId: () => faker.number.int({ min: 0, max: 10 }),
       transactionDate: () => faker.date.between({
@@ -149,7 +191,10 @@ export class Generator {
     });
   }
 
-  private async createStudentGrades(size: number = this.minPrimarySize): Promise<StudentGrades[]> {
+  @CreateTableMethod()
+  private async createStudentGrades(
+    size: number = this.config.student_grades || this.minPrimarySize
+  ): Promise<StudentGrades[]> {
     return this.createEntity(StudentGrades)(size)({
       studentId: () => faker.number.int({ min: 0, max: 50 }),
       courseId: () => faker.number.int({ min: 0, max: 10 }),
@@ -157,14 +202,20 @@ export class Generator {
     });
   }
 
-  private async createResponses(size: number = this.minPrimarySize): Promise<Responses[]> {
+  @CreateTableMethod()
+  private async createResponses(
+    size: number = this.config.responses || this.minPrimarySize
+  ): Promise<Responses[]> {
     return this.createEntity(Responses)(size)({
       employeeId: () => faker.number.int({ min: 0, max: 50 }),
       responseTime: () => faker.number.int({ min: 0, max: 100, multipleOf: 10 }),
     });
   }
 
-  private async createSalesReps(size: number = this.minPrimarySize): Promise<SalesReps[]> {
+  @CreateTableMethod()
+  private async createSalesReps(
+    size: number = this.config.sales_reps || this.minPrimarySize
+  ): Promise<SalesReps[]> {
     return this.createEntity(SalesReps)(size)({
       salesCount: () => faker.number.int({ min: 0, max: 1000 }),
       month: () => faker.date.between({
@@ -174,14 +225,20 @@ export class Generator {
     });
   }
 
-  private async createMovies(size: number = this.minPrimarySize): Promise<Movies[]> {
+  @CreateTableMethod()
+  private async createMovies(
+    size: number = this.config.movies || this.minPrimarySize
+  ): Promise<Movies[]> {
     return this.createEntity(Movies)(size)({
       genre: () => faker.music.genre(),
       rating: () => faker.number.float({ min: 0, max: 9.9, fractionDigits: 1 }).toFixed(1)
     });
   }
 
-  private async createPurchases(size: number = this.minPrimarySize): Promise<Purchases[]> {
+  @CreateTableMethod()
+  private async createPurchases(
+    size: number = this.config.purchases || this.minPrimarySize 
+  ): Promise<Purchases[]> {
     return this.createEntity(Purchases)(size)({
       clientId: () => faker.number.int({ min: 0, max: 10 }),
       categoryId: () => faker.helpers.arrayElement(['A', 'B', 'C', 'D', 'E']),
@@ -189,20 +246,29 @@ export class Generator {
     });
   }
 
-  private async createProducts(size: number = this.minPrimarySize): Promise<Products[]> {
+  @CreateTableMethod()
+  private async createProducts(
+    size: number = this.config.products || this.minPrimarySize
+  ): Promise<Products[]> {
     return this.createEntity(Products)(size)({
       productId: () => faker.number.int({ min: 0, max: 50 }),
       sales: () => faker.number.int({ min: 0, max: 5000, multipleOf: 100 })
     });
   }
 
-  private async createProjects(size: number = this.minPrimarySize): Promise<Projects[]> {
+  @CreateTableMethod()
+  private async createProjects(
+    size: number = this.config.projects || this.minPrimarySize
+  ): Promise<Projects[]> {
     return this.createEntity(Projects)(size)({
       budget: () => faker.number.int({ min: 0, max: 100_000, multipleOf: 1000 })
     });
   }
 
-  private async createSalaries(size: number = this.minPrimarySize): Promise<Salaries[]> {
+  @CreateTableMethod()
+  private async createSalaries(
+    size: number = this.config.salaries || this.minPrimarySize
+  ): Promise<Salaries[]> {
     return this.createEntity(Salaries)(size)({
       employeeId: () => faker.number.int({ min: 0, max: 5 }),
       salary: () => faker.number.int({ min: 2000, max: 10000, multipleOf: 100 }),
@@ -213,7 +279,10 @@ export class Generator {
     });
   }
 
-  private async createProductPrices(size: number = this.minPrimarySize): Promise<ProductPrices[]> {
+  @CreateTableMethod()
+  private async createProductPrices(
+    size: number = this.config.product_prices || this.minPrimarySize
+  ): Promise<ProductPrices[]> {
     return this.createEntity(ProductPrices)(size)({
       productId: () => faker.number.int({ min: 0, max: 10 }),
       price: () => faker.number.int({ min: 0, max: 500, multipleOf: 10 }),
@@ -224,7 +293,10 @@ export class Generator {
     });
   }
 
-  private async createOrderStatuses(size: number = this.minPrimarySize): Promise<OrderStatuses[]> {
+  @CreateTableMethod()
+  private async createOrderStatuses(
+    size: number = this.config.order_statuses || this.minPrimarySize
+  ): Promise<OrderStatuses[]> {
     return this.createEntity(OrderStatuses)(size)({
       status: () => faker.helpers.arrayElement(['Shipped', 'Delivered', 'Pending']),
       orderId: () => faker.number.int({ min: 0, max: 10 }),
@@ -235,7 +307,10 @@ export class Generator {
     });
   }
 
-  private async createProjectStages(size: number = this.minPrimarySize): Promise<ProjectStages[]> {
+  @CreateTableMethod()
+  private async createProjectStages(
+    size: number = this.config.project_stages || this.minPrimarySize
+  ): Promise<ProjectStages[]> {
     return this.createEntity(ProjectStages)(size)({
       projectId: () => faker.number.int({ min: 0, max: 5 }),
       stage: () => faker.helpers.arrayElement(['Planning', 'Execution', 'Review']),
@@ -246,7 +321,10 @@ export class Generator {
     });
   }
 
-  private async createDailySales(size: number = this.minPrimarySize): Promise<DailySales[]> {
+  @CreateTableMethod()
+  private async createDailySales(
+    size: number = this.config.daily_sales || this.minPrimarySize
+  ): Promise<DailySales[]> {
     return this.createEntity(DailySales)(size)({
       sales: () => faker.number.int({ min: 0, max: 500, multipleOf: 10 }),
       date: () => faker.date.between({
@@ -256,7 +334,10 @@ export class Generator {
     });
   }
 
-  private async createUserVisits(size: number = this.minPrimarySize): Promise<UserVisits[]> {
+  @CreateTableMethod()
+  private async createUserVisits(
+    size: number = this.config.user_visits || this.minPrimarySize
+  ): Promise<UserVisits[]> {
     return this.createEntity(UserVisits)(size)({
       userId: () => faker.number.int({ min: 0, max: 5 }),
       visitCount: () => faker.number.int({ min: 0, max: 10 }),
@@ -267,7 +348,10 @@ export class Generator {
     });
   }
 
-  private async createMonthlySales(size: number = this.minPrimarySize): Promise<MonthlySales[]> {
+  @CreateTableMethod()
+  private async createMonthlySales(
+    size: number = this.config.monthly_sales || this.minPrimarySize
+  ): Promise<MonthlySales[]> {
     return this.createEntity(MonthlySales)(size)({
       region: () => faker.helpers.arrayElement(['North', 'South ', 'West', 'East']),
       sales: () => faker.number.int({ min: 0, max: 2000, multipleOf: 10 }),
@@ -278,7 +362,10 @@ export class Generator {
     });
   }
 
-  private async createCustomerOrders(size: number = this.minPrimarySize): Promise<CustomerOrders[]> {
+  @CreateTableMethod()
+  private async createCustomerOrders(
+    size: number = this.config.customer_orders || this.minPrimarySize
+  ): Promise<CustomerOrders[]> {
     return this.createEntity(CustomerOrders)(size)({
       customerId: () => faker.number.int({ min: 0, max: 10 }),
       orderAmount: () => faker.number.int({ min: 0, max: 500, multipleOf: 10 }),
@@ -289,7 +376,10 @@ export class Generator {
     });
   }
 
-  private async createProductRevenue(size: number = this.minPrimarySize): Promise<ProductRevenue[]> {
+  @CreateTableMethod()
+  private async createProductRevenue(
+    size: number = this.config.product_revenue || this.minPrimarySize
+  ): Promise<ProductRevenue[]> {
     return this.createEntity(ProductRevenue)(size)({
       productId: () => faker.number.int({ min: 0, max: 10 }),
       revenueAmount: () => faker.number.int({ min: 100, max: 800, multipleOf: 100 }),
@@ -300,7 +390,10 @@ export class Generator {
     });
   }
 
-  private async createEmployeeSales(size: number = this.minPrimarySize): Promise<EmployeeSales[]> {
+  @CreateTableMethod()
+  private async createEmployeeSales(
+    size: number = this.config.employee_sales || this.minPrimarySize
+  ): Promise<EmployeeSales[]> {
     return this.createEntity(EmployeeSales)(size)({
       employeeId: () => faker.number.int({ min: 0, max: 10 }),
       salesAmount: () => faker.number.int({ min: 2000, max: 8000, multipleOf: 100 }),
@@ -311,36 +404,13 @@ export class Generator {
     });
   }
 
-  private async createEmployeePerformance(size: number = this.minPrimarySize): Promise<EmployeePerformance[]> {
+  @CreateTableMethod()
+  private async createEmployeePerformance(
+    size: number = this.config.employee_performance || this.minPrimarySize
+  ): Promise<EmployeePerformance[]> {
     return this.createEntity(EmployeePerformance)(size)({
       employeeId: () => faker.number.int({ min: 0, max: 10 }),
       tasksCompleted: () => faker.number.int({ min: 10, max: 20 }),
-    });
-  }
-
-  private async createBooksAndAuthors(
-    primarySize: number = this.minPrimarySize,
-    secondarySize: number = this.minSecondarySize
-  ): Promise<Books[]> {
-    const authors = await this.createEntity(Authors)(secondarySize)({
-      authorName: () => faker.person.firstName(),
-    });
-    return this.createEntity(Books)(primarySize)({
-      author: () => faker.helpers.arrayElement(authors),
-      bookTitle: () => faker.hacker.phrase()
-    });
-  }
-
-  private async createCoursesAndStudents(
-    primarySize: number = this.minPrimarySize,
-    secondarySize: number = this.minSecondarySize
-  ): Promise<Courses[]> {
-    const students = await this.createEntity(Students)(secondarySize)({
-      studentName: () => faker.person.firstName(),
-    });
-    return this.createEntity(Courses)(primarySize)({
-      student: () => faker.helpers.arrayElement([...students, null]),
-      courseName: () => faker.lorem.sentence(4)
     });
   }
 
@@ -348,11 +418,6 @@ export class Generator {
     return (length: number) => {
       return async (entityCallbacks: DeepCallbacks<Entity>) => {
         const limit = 1000;
-        const barLimit = Math.ceil(length / limit);
-        const creatingBar = new SingleBar({
-          format: `Creating of ${targetEntity.name} | {bar} | {percentage}% || {value}/{total} Chunks`,
-        }, Presets.legacy);
-        creatingBar.start(barLimit, 0);
         const repository = this.dataSource.getRepository(targetEntity);
         const raws = new Array(Math.ceil(length / limit)).fill(null).map(
           (_, index) => new Array<Entity>(
@@ -369,25 +434,13 @@ export class Generator {
             }
             const raw = repository.create(obj as Entity);
             raws[i][j] = raw;
-            creatingBar.update(i + 1);
           }
         }
-        creatingBar.stop();
-        const uploadingBar = new SingleBar({
-          format: `Uploading of ${targetEntity.name} | {bar} | {percentage}% || {value}/{total} Chunks`,
-        }, Presets.legacy);
-        uploadingBar.start(barLimit, 0);
-        const result: Entity[] = [];
-        const promises = raws.map(async (raw) => {
-          const dbRaw = await repository.save(raw);
-          result.push(...dbRaw);
-          uploadingBar.increment();
-        });
-        await Promise.all(promises);
-        uploadingBar.stop();
-        return result;
+        const results = await Promise.all(
+          raws.map(async (raw) => repository.save(raw))
+        );
+        return results.flat();
       }
     }
   }
-
 }

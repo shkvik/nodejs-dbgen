@@ -41,7 +41,7 @@ export class TablesConfig {
   @Field() employee_sales: number;
   @Field() employee_performance: number;
 
-  static [Symbol.hasInstance](instance: any) {
+  static [Symbol.hasInstance](instance: any): boolean {
     const fields = Reflect.getMetadata('fields', TablesConfig.prototype) || [];
     return fields.every(
       (field: string) => Object.hasOwn(instance, field)
@@ -49,17 +49,12 @@ export class TablesConfig {
         && instance[field] >= 0
     );
   }
-}
 
-
-export const getConfig = () => {
-
-  const fileContents = readFileSync('config.yaml', 'utf8');
-  const config = load(fileContents) as TablesConfig;
-
-  if(config instanceof TablesConfig){
-    return config;
-  } else {
-    throw new Error('Incorrect config')
+  static getConfig(): TablesConfig {
+    const config = load(readFileSync('config.yaml', 'utf8')) as TablesConfig;
+    if(config instanceof TablesConfig){
+      return config;
+    }
+    throw new Error(`config is not correct!`)
   }
 }
