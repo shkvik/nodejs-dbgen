@@ -32,6 +32,10 @@ import { Courses } from "./pg_schema/entities/Courses";
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { TablesConfig } from "./config";
+import { Users } from "./pg_schema/entities/Users";
+import { EmployeeProjects } from "./pg_schema/entities/EmployeeProjects";
+import { Sales } from "./pg_schema/entities/Sales";
+import { StudentScores } from "./pg_schema/entities/StudentScores";
 
 type DeepStructure<T> = T | (T extends Array<infer U> ? DeepStructure<U>[]
   : T extends Map<infer K, infer V> ? Map<DeepStructure<K>, DeepStructure<V>>
@@ -411,6 +415,52 @@ export class Generator {
     return this.createEntity(EmployeePerformance)(size)({
       employeeId: () => faker.number.int({ min: 0, max: 10 }),
       tasksCompleted: () => faker.number.int({ min: 10, max: 20 }),
+    });
+  }
+  
+  @CreateTableMethod()
+  private async createUsers(
+    size: number = this.config.users || this.minPrimarySize,
+  ): Promise<Users[]> {
+    return this.createEntity(Users)(size)({
+      username: () => faker.person.fullName(),
+      email: () => faker.internet.email(),
+      password: () => faker.string.hexadecimal({length:{min: 30, max: 30}})
+    });
+  }
+
+  @CreateTableMethod()
+  private async createEmployeeProjects(
+    size: number = this.config.employee_projects || this.minPrimarySize,
+  ): Promise<EmployeeProjects[]> {
+    return this.createEntity(EmployeeProjects)(size)({
+      employeeId: () => faker.number.int({ min: 0, max: 10 }),
+      projectId: () => faker.number.int({ min: 0, max: 10 }),
+    });
+  }
+
+  @CreateTableMethod()
+  private async createSales(
+    size: number = this.config.sales || this.minPrimarySize,
+  ): Promise<Sales[]> {
+    return this.createEntity(Sales)(size)({
+      productId: () => faker.number.int({ min: 0, max: 10 }),
+      amount: () => faker.number.int({ min: 1000, max: 8000, multipleOf: 100 }),
+      saleDate: () => faker.date.between({
+        from: '2020-01-01T00:00:00.000Z',
+        to: '2024-01-01T00:00:00.000Z'
+      }).toDateString(),
+    });
+  }
+
+  @CreateTableMethod()
+  private async createStudentScores(
+    size: number = this.config.student_scores || this.minPrimarySize,
+  ): Promise<StudentScores[]> {
+    return this.createEntity(StudentScores)(size)({
+      studentId: () => faker.number.int({ min: 0, max: size }),
+      score: () => faker.number.int({ min: 0, max: 100 }),
+      subject: () => faker.helpers.arrayElement(['Math', 'Physics', 'History']),
     });
   }
 

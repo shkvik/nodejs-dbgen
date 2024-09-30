@@ -1,3 +1,5 @@
+users: 100
+sales: 100
 employees: 100
 departments: 10
 teams: 10
@@ -9,6 +11,7 @@ courses: 100
 students: 10
 transactions: 100
 student_grades: 100
+student_scores: 100
 responses: 100
 sales_reps: 100
 movies: 100
@@ -25,4 +28,5 @@ monthly_sales: 100
 customer_orders: 100
 product_revenue: 100
 employee_sales: 100
+employee_projects: 100
 employee_performance: 100

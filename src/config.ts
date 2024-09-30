@@ -12,6 +12,8 @@ function Field() {
 
 export class TablesConfig {
 
+  @Field() users: number;
+  @Field() sales: number;
   @Field() employees: number;
   @Field() departments: number;
   @Field() teams: number;
@@ -23,6 +25,7 @@ export class TablesConfig {
   @Field() students: number;
   @Field() transactions: number;
   @Field() student_grades: number;
+  @Field() student_scores: number;
   @Field() responses: number;
   @Field() sales_reps: number;
   @Field() movies: number;
@@ -39,6 +42,7 @@ export class TablesConfig {
   @Field() customer_orders: number;
   @Field() product_revenue: number;
   @Field() employee_sales: number;
+  @Field() employee_projects: number;
   @Field() employee_performance: number;
 
   static [Symbol.hasInstance](instance: any): boolean {
